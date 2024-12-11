@@ -4,9 +4,12 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const authRouter = require('./routes/authRoute');
 const authenticateToken = require('./middlewares/authenticateToken');
+const allowedTo = require('./middlewares/allowedTo');
+const isConfirmed = require('./middlewares/isConfirmed');
 
 //Only Used Once
 const crypto = require('crypto');
+
 const secretKey = crypto.randomBytes(64).toString('hex');
 // console.log(secretKey);
 
@@ -19,7 +22,7 @@ const dbUri = process.env.DB_URI;
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.get('/', authenticateToken, (req, res) => {
+app.get('/', authenticateToken, isConfirmed, allowedTo('SUBSCRIBER'), (req, res) => {
     res.send('Success');
 });
 

@@ -4,11 +4,13 @@ const Schema = mongoose.Schema;
 const userSchema = new Schema({
     username: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     email: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     password: {
         type: String,
@@ -34,7 +36,29 @@ const userSchema = new Schema({
         type: Boolean,
         required: false,
         default: false
+    },
+    role: {
+        type: String,
+        enum: ['ADMIN', 'EDITOR', 'AUTHOR', 'SUBSCRIBER'],
+        default: 'SUBSCRIBER'
     }
 });
 
 module.exports = mongoose.model('User', userSchema);
+
+
+// Example roles object
+const roles = {
+    admin: {
+        can: ['create', 'read', 'update', 'delete', 'manageUsers']
+    },
+    editor: {
+        can: ['create', 'read', 'update', 'delete']
+    },
+    author: {
+        can: ['create', 'read', 'update']
+    },
+    subscriber: {
+        can: ['read', 'comment']
+    }
+};

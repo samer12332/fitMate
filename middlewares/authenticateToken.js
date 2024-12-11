@@ -12,6 +12,8 @@ const authenticateToken = (req, res, next) => {
         if (err) {
             next(appError.create("Forbidden: Invalid token", 403, 'fail'));
         }
+        console.log(user);
+        console.log(user.role);
         req.user = user;
     });
     next();

@@ -1,8 +1,10 @@
 const User = require('../models/userModel');
 const appError = require('../utils/appError');
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
 const {generateAccessToken, generateRefreshToken} = require('../utils/generateJWT');
+const { sendMail } = require('../services/mailService');
 
 
 
@@ -14,18 +16,21 @@ const register = async (req, res, next) => {
         return;
     }
     const hashedPassword = await bcrypt.hash(password, 10);
+    const registerationToken = uuidv4()
     const newUser = new User({
         username,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        registerationToken
     });
-    const accessToken = generateAccessToken({email: newUser.email, id: newUser._id});
-    const refreshToken = generateRefreshToken({email: newUser.email, id: newUser._id});
+    const accessToken = generateAccessToken({id: newUser._id, email: newUser.email, role: newUser.role, isConfirmed: newUser.isConfirmed});
+    const refreshToken = generateRefreshToken({id: newUser._id, email: newUser.email, role: newUser.role, isConfirmed: newUser.isConfirmed});
     newUser.refreshToken = refreshToken;
     await newUser.save();
+    await sendMail(username, email, registerationToken);
     res.status(200).json({
         status: 'success',
-        message: "User registered successfully",
+        message: "Please, confirm your email",
         data: {
             user: newUser,
             accessToken,
@@ -33,8 +38,26 @@ const register = async (req, res, next) => {
         }
     });
 }
+const confirmEmail = async (req, res, next) => {
+    const token = req.params.token;
+    const user = await User.findOne({registerationToken: token});
+    if (!user) {
+        next(appError.create('Token is incorrect', 400, 'fail'));
+        return;
+    }
+    user.registerationToken = '';
+    user.isConfirmed = true;
+    await user.save();
+    res.status(200).json({
+        status: 'success',
+        message: "Email is confirmed",
+        data: {
+            user
+        }
+    })
+}
 
-const refreshAccessToken = async (req, res, next) => {
+const refreshAccessToken = (req, res, next) => {
     const { token } = req.body;
     if (!token) {
         next(appError.create('Unauthorized: Token is missing', 401, 'fail'));
@@ -46,7 +69,7 @@ const refreshAccessToken = async (req, res, next) => {
             next(appError.create("Forbidden: Invalid token", 403, 'fail'));
             return;
         }
-        const accessToken = generateAccessToken({email: user.email, id: user._id});
+        const accessToken = generateAccessToken({id: user._id, email: user.email, role: user.role, isConfirmed: user.isConfirmed});
         res.status(200).json({
             status: 'success',
             message: "New access token generated successfully",
@@ -69,8 +92,12 @@ const login = async (req, res, next) => {
         next(appError.create('Incorrect password', 401, 'fail'));
         return;
     }
-    const accessToken = generateAccessToken({email: user.email, id: user._id});
-    const refreshToken = generateRefreshToken({email: user.email, id: user._id});
+    if(!user.isConfirmed) {
+        next(appError.create('Your email is not confirmed. Please check your email for the confirmation link.', 403, 'fail'));
+        return;
+    }
+    const accessToken = generateAccessToken({id: user._id, email: user.email, role: user.role, isConfirmed: user.isConfirmed});
+    const refreshToken = generateRefreshToken({id: user._id, email: user.email, role: user.role, isConfirmed: user.isConfirmed});
     user.refreshToken = refreshToken;
     await user.save();
     res.status(200).json({
@@ -89,5 +116,6 @@ const login = async (req, res, next) => {
 module.exports = {
     register,
     refreshAccessToken,
-    login
+    login,
+    confirmEmail
 }
