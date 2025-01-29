@@ -1,11 +1,39 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const informationSchema = new Schema({
+    weight: {
+        type: Number,
+    },
+    height: {
+        type: Number
+    },
+    age: {
+        type: Number
+    },
+    foodDislikes: {
+        type: [String],
+        default: []
+    },
+    trainRate: {
+        type: String,
+        enum: ['none', 'light', 'moderate', 'intense', 'extreme']
+    },
+    budget: {
+        type: String,
+        enum: ['low', 'medium', 'high']
+    },
+    trainingPlace: {
+        type: String,
+        enum: ['home', 'gym', 'none']
+    }
+});
+
 const userSchema = new Schema({
     username: {
         type: String,
-        required: true,
-        unique: true
+        required: true, 
+        unique: false
     },
     email: {
         type: String,
@@ -14,7 +42,6 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required:true 
     },
     refreshToken: {
         type: String,
@@ -39,26 +66,24 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ['ADMIN', 'EDITOR', 'AUTHOR', 'SUBSCRIBER'],
+        enum: ['ADMIN', 'SUBSCRIBER'],
         default: 'SUBSCRIBER'
+    },
+    resetPasswordToken: {
+        type: String
+    },
+    info: informationSchema,
+    goal: {
+        type: String,
+        enum: ['cardio', 'diet', 'bulk fast', 'clean bulk', 'maintain weight cutting', 'maintain weight keep']
+    },
+    activityLevel: {
+        type: String,
+        enum: ['none', 'light', 'moderate', 'intense', 'extreme']
     }
 });
 
 module.exports = mongoose.model('User', userSchema);
 
 
-// Example roles object
-const roles = {
-    admin: {
-        can: ['create', 'read', 'update', 'delete', 'manageUsers']
-    },
-    editor: {
-        can: ['create', 'read', 'update', 'delete']
-    },
-    author: {
-        can: ['create', 'read', 'update']
-    },
-    subscriber: {
-        can: ['read', 'comment']
-    }
-};
+

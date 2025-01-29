@@ -1,18 +1,8 @@
 const nodemailer = require('nodemailer');
 const {oauth2Client} = require('../config/auth2Client');
 
-const sendMail = async (username, email, token) => {
+const sendMail = async (email, html) => {
     const accessToken = await oauth2Client.getAccessToken();
-    const html = `<p>Hi <strong>${username}</strong>,</p> 
-    <p>Thank you for registering with <strong>[fitMate]</strong>.</p> 
-    <p>Please use the following link to complete your registration:</p> 
-    <p style="font-size: 18px; color: blue;"> 
-        <a href="http://localhost:3000/api/user/register/confirm/${token}" target="_blank">
-            Complete Registration
-        </a>
-    </p> 
-    <p>If you did not request this, please ignore this email.</p> 
-    <p>Best regards,<br>fitMate</p>`;
 
     const transporter = nodemailer.createTransport({
         service: 'gmail',

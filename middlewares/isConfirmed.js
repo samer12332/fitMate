@@ -6,5 +6,5 @@ module.exports = (req, res, next) => {
         next(appError.create('Email is not confirmed', 403, 'fail'));
         return;
     }
-    next();
+    next(); 
 }
