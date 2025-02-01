@@ -14,6 +14,8 @@ const adminRouter = require('./routes/adminRoutes');
 const app = express();
 dotenv.config();
 
+const cors = require('cors');
+app.use(cors());
 app.use(passport.initialize());
 
 const port = process.env.PORT || 3001;
