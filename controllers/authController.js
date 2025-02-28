@@ -49,29 +49,40 @@ const register = async (req, res, next) => {
 
 
 const confirmEmail = async (req, res, next) => {
-    const token = req.params.token;
-    const user = await User.findOne({registerationToken: token});
-    if (!user) {
-        next(appError.create('Token is incorrect', 400, 'fail'));
-        return;
-    }
+  const token = req.params.token;
+  const user = await User.findOne({ registerationToken: token });
+  if (!user) {
+    next(appError.create("Token is incorrect", 400, "fail"));
+    return;
+  }
 
-    const accessToken = generateAccessToken({id: user._id, email: user.email, role: user.role, isConfirmed: true});
-    const refreshToken = generateRefreshToken({id: user._id, email: user.email, role: user.role, isConfirmed: true});
-    user.refreshToken = refreshToken;
-    user.registerationToken = '';
-    user.isConfirmed = true;
-    await user.save();
-    res.status(200).json({
-        status: 'success',
-        message: "Email is confirmed",
-        data: {
-            accessToken,
-            refreshToken,
-            user
-        }
-    })
-}
+  const accessToken = generateAccessToken({
+    id: user._id,
+    email: user.email,
+    role: user.role,
+    isConfirmed: true,
+  });
+  const refreshToken = generateRefreshToken({
+    id: user._id,
+    email: user.email,
+    role: user.role,
+    isConfirmed: true,
+  });
+  user.refreshToken = refreshToken;
+  user.registerationToken = "";
+  user.isConfirmed = true;
+  await user.save();
+  // res.status(200).json({
+  //   status: "success",
+  //   message: "Email is confirmed",
+  //   data: {
+  //     accessToken,
+  //     refreshToken,
+  //     user,
+  //   },
+  // });
+  res.status(200).redirect("http://localhost:3000/api/users/info");
+};
 
 const refreshAccessToken = (req, res, next) => {
     const { token } = req.body;
